@@ -6,7 +6,7 @@ from fastapi.staticfiles import StaticFiles
 
 app = FastAPI()
 
-# Enable CORS so the main website can access these models
+# Enable CORS for cross-device access
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"], 
@@ -14,23 +14,37 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Use the 'app' folder where your index.html and models are located
-current_dir = os.path.dirname(os.path.abspath(__file__))
-app_path = os.path.join(current_dir, "app")
+# Get the absolute path to the directory where main.py is located
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+# The 'app' folder is in the same directory as main.py
+APP_PATH = os.path.join(BASE_DIR, "app")
 
-@app.get("/{file_name}")
+# 1. Serve index.html at the main URL (https://ar-webiste.onrender.com/)
+@app.get("/")
+async def serve_home():
+    index_path = os.path.join(APP_PATH, "index.html")
+    if os.path.exists(index_path):
+        return FileResponse(index_path)
+    raise HTTPException(status_code=404, detail="index.html not found in app folder")
+
+# 2. Automatically serve all models and images inside the 'app' folder
+# This makes them available at https://ar-webiste.onrender.com/app/filename.glb
+if os.path.exists(APP_PATH):
+    app.mount("/app", StaticFiles(directory=APP_PATH), name="app")
+
+# 3. Keep your custom search logic for specific model requests
+@app.get("/models/{file_name}")
 async def get_model(file_name: str):
-    # Your fuzzy search logic for typos
     search_name = file_name.lower().replace("naunt", "naut")
     
-    if not os.path.exists(app_path):
+    if not os.path.exists(APP_PATH):
          raise HTTPException(status_code=500, detail="App folder not found")
 
-    for existing_file in os.listdir(app_path):
+    for existing_file in os.listdir(APP_PATH):
         if existing_file.lower() == search_name:
-            file_path = os.path.join(app_path, existing_file)
+            file_path = os.path.join(APP_PATH, existing_file)
             
-            # Set headers correctly for iPhone/Android compatibility
+            # Proper media types for AR compatibility
             if existing_file.endswith(".glb"):
                 return FileResponse(file_path, media_type="model/gltf-binary")
             if existing_file.endswith(".usdz"):
@@ -38,8 +52,3 @@ async def get_model(file_name: str):
             return FileResponse(file_path)
             
     raise HTTPException(status_code=404, detail="Model not found")
-
-# Serve the index.html as the home page
-@app.get("/")
-async def serve_home():
-    return FileResponse(os.path.join(app_path, "index.html"))
