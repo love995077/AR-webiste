@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <style>
+    .controls { 
+      margin-top: 20px; 
+      display: flex; 
+      justify-content: center; 
+      flex-wrap: wrap; /* This ensures buttons wrap to the next line if there are too many */
+      gap: 10px; 
+      padding: 0 15px;
+    }
+    .btn { 
+      padding: 10px 18px; 
+      font-weight: bold; 
+      border: 2px solid #007bff; 
+      background: white; 
+      color: #007bff; 
+      border-radius: 30px; 
+      cursor: pointer; 
+      transition: 0.3s;
+    }
+    .btn.active { background: #007bff; color: white; }
+    #qrcode { margin-top: 20px; padding: 15px; background: white; display: inline-block; border-radius: 10px; }
+  </style>
+</head>
+
+<body style="margin: 0; text-align: center; font-family: sans-serif; background-color: #f8f9fa;">
+
+  <h2 style="padding-top: 20px;">Altao AR: Product Gallery</h2>
+
+  <model-viewer 
+    id="ar-display" 
+    src="Astronaut.glb" 
+    ar 
+    ar-modes="webxr scene-viewer quick-look" 
+    camera-controls 
+    auto-rotate 
+    style="width: 100%; height: 50vh; background-color: #2c3e50;">
+    
+    <button slot="ar-button" style="background: white; border-radius: 8px; border: none; padding: 12px 20px; position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); font-weight: bold; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+      👋 View in My Room
+    </button>
+  </model-viewer>
+
+  <div class="controls">
+    <button class="btn active" onclick="updateAll(this, 'Astronaut.glb')">Astronaut</button>
+    <button class="btn" onclick="updateAll(this, 'model_cealing fan.glb')">Ceiling Fan</button>
+    <button class="btn" onclick="updateAll(this, 'fan_compres.glb')">Compressed Fan</button>
+    <button class="btn" onclick="updateAll(this, 'Untitled.glb')">Untitled Model</button>
+  </div>
+
+  <div style="margin-top: 30px;">
+    <div id="qrcode"></div>
+    <p id="qr-label" style="color: #666; font-weight: bold; margin-top: 10px;">QR for: Astronaut</p>
+  </div>
+
+  <script>
+    let qrContainer = document.getElementById("qrcode");
+
+    function updateAll(button, modelFile) {
+      // 1. Update the 3D Viewer
+      const viewer = document.getElementById('ar-display');
+      viewer.src = modelFile;
+
+      // 2. Update Button UI colors
+      document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
+      button.classList.add('active');
+
+      // 3. Update the Label below the QR Code
+      document.getElementById('qr-label').innerText = "QR for: " + modelFile;
+
+      // 4. Update the QR Code with a unique link for the selected model
+      const baseUrl = window.location.href.split('?')[0]; 
+      const uniqueUrl = baseUrl + "?model=" + encodeURIComponent(modelFile);
+      
+      generateQR(uniqueUrl);
+    }
+
+    function generateQR(url) {
+      qrContainer.innerHTML = ""; // Clear old QR before drawing new one
+      new QRCode(qrContainer, {
+        text: url,
+        width: 150,
+        height: 150
+      });
+    }
+
+    // Initialize the first QR code as soon as the page loads
+    window.onload = () => { 
+      generateQR(window.location.href); 
+    };
+  </script>
+</body>
+</html>
