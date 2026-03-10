@@ -39,20 +39,19 @@
   <model-viewer 
     id="ar-display" 
     src="Astronaut.glb" 
-    ios-src="Astronaut.usdz"
     ar 
     ar-modes="webxr scene-viewer quick-look" 
     camera-controls 
     auto-rotate 
 
-    /* REALISM & LIGHTING */
+    /* FIX 1: REALISM & LIGHTING */
     exposure="1.2" 
     shadow-intensity="1.5" 
     shadow-softness="0.5"
     tone-mapping="commerce"
     environment-image="neutral"
     
-    /* INTERACTION SETTINGS */
+    /* FIX 2: SMOOTH ROTATION & INTERACTION */
     interaction-prompt="auto"
     touch-action="pan-y"
     interpolation-decay="200"
@@ -64,9 +63,9 @@
   </model-viewer>
 
   <div class="controls">
-    <button class="btn active" onclick="updateAll(this, 'Astronaut.glb','floor')">Astronaut</button>
-    <button class="btn" onclick="updateAll(this, 'model_cealing fan.glb','wall')">Ceiling Fan</button>
-    <button class="btn" onclick="updateAll(this, 'luxury.glb','floor')">Oltao Fan</button>
+    <button class="btn active" onclick="updateAll(this, 'Astronaut.glb')">Astronaut</button>
+    <button class="btn" onclick="updateAll(this, 'model_cealing fan.glb')">Ceiling Fan</button>
+    <button class="btn" onclick="updateAll(this, 'luxury.glb')">Luxury Fan</button>
   </div>
 
   <div style="margin-top: 30px;">
@@ -77,24 +76,18 @@
   <script>
     let qrContainer = document.getElementById("qrcode");
 
-    function updateAll(button, glbFile, usdzFile, placement) {
+    function updateAll(button, modelFile) {
       const viewer = document.getElementById('ar-display');
-      
-      // 1. Update the 3D files for both platforms
-      viewer.src = glbFile;
-      viewer.setAttribute('ios-src', usdzFile);
+      viewer.src = modelFile;
 
-      // 2. Dynamically change placement (floor or wall)
-      viewer.setAttribute('ar-placement', placement);
-
-      // 3. Update Button UI
       document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
       button.classList.add('active');
 
-      // 4. Update Labels and QR
-      document.getElementById('qr-label').innerText = "QR for: " + glbFile;
+      document.getElementById('qr-label').innerText = "QR for: " + modelFile;
+
       const baseUrl = window.location.href.split('?')[0]; 
-      const uniqueUrl = baseUrl + "?model=" + encodeURIComponent(glbFile);
+      const uniqueUrl = baseUrl + "?model=" + encodeURIComponent(modelFile);
+      
       generateQR(uniqueUrl);
     }
 
@@ -114,7 +107,6 @@
       if (modelParam) {
         const viewer = document.getElementById('ar-display');
         viewer.src = modelParam;
-        // Defaulting to glb name for QR label
         document.getElementById('qr-label').innerText = "QR for: " + modelParam;
       }
       
